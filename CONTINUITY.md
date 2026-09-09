@@ -2,6 +2,10 @@
 
 ## Current state
 
+- 2026-09-09: Console merged through PR #6 as `51ff89c`; local `main` synced.
+  Added `docs/order-support-console.md` and a README link explaining its purpose,
+  minimal UX, JavaScript/TypeScript tradeoff, limits, and manual verification.
+  User authorized a documentation PR and squash merge; runtime code is unchanged.
 - 2026-09-09: User authorized publishing the order support console after a
   final review, through a feature PR and squash merge. Retain the minimal UI,
   documented loaded-set pagination limit, and unchanged backend contracts.
