@@ -22,11 +22,31 @@ export class OrderEmailerInstance extends QueueInstance<OrderMessage> {
    * @param message
    * @protected
    */
-  protected async process({ orderId }: OrderMessage): Promise<void> {
+  protected async process({ orderId, kind }: OrderMessage): Promise<void> {
     const order = await OrdersDatabase.getOrderById(orderId);
 
     if (!order) throw new Error(`Order not found: ${orderId}`);
+
+    if (kind === "cancellation") {
+      if (order.status !== OrderStatus.CANCELLED) {
+        this.logger.warn(`Order ${orderId} is not cancelled`);
+        return;
+      }
+      if (!order.details?.customer?.email) {
+        this.logger.warn(`Order ${orderId} has no customer email for cancellation`);
+        return;
+      }
+      await EmailService.sendCancellationEmail({ order });
+      this.logger.info(`Cancellation email sent for order ${orderId}`);
+      return;
+    }
+
     if (order.status !== OrderStatus.PROCESSING) {
+      if (order.status === OrderStatus.CANCELLED && order.receiptFilePath) {
+        await fs.unlink(order.receiptFilePath).catch((error: any) => {
+          if (error?.code !== "ENOENT") throw error;
+        });
+      }
       this.logger.warn(`Order ${orderId} is not in PROCESSING state`);
       return;
     }
@@ -38,6 +58,15 @@ export class OrderEmailerInstance extends QueueInstance<OrderMessage> {
 
     // Read the receipt file into a buffer
     const receipt = await fs.readFile(order.receiptFilePath);
+    const admitted = await OrdersDatabase.updateIfStatus(order.orderId, OrderStatus.PROCESSING, {});
+    if (!admitted) {
+      await fs.unlink(order.receiptFilePath).catch((error: any) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+      this.logger.warn(`Order ${orderId} was cancelled before receipt email`);
+      return;
+    }
+
     await EmailService.sendEmail({
       order,
       receipt,
@@ -45,9 +74,11 @@ export class OrderEmailerInstance extends QueueInstance<OrderMessage> {
 
     this.logger.info(`Order ${orderId} email sent`);
 
-    await OrdersDatabase.update(order.orderId, { status: OrderStatus.COMPLETED, completedAt: Date.now() });
-    await fs.unlink(order.receiptFilePath);
+    const completed = await OrdersDatabase.updateIfStatus(order.orderId, OrderStatus.PROCESSING, { status: OrderStatus.COMPLETED, completedAt: Date.now() });
+    await fs.unlink(order.receiptFilePath).catch((error: any) => {
+      if (error?.code !== "ENOENT") throw error;
+    });
     
-    this.logger.info(`Order ${orderId} status updated`);
+    this.logger.info(`Order ${orderId} status ${completed ? "updated" : "preserved after cancellation"}`);
   }
 }

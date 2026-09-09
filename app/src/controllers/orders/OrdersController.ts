@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 
 import { Controller } from "../Controller";
 import { OrdersDatabase } from "../../databases/OrdersDatabase";
-import { getOrderStatus } from "../../definitions/enums/OrderStatus";
+import { getOrderStatus, OrderStatus } from "../../definitions/enums/OrderStatus";
 import { OrderFactory } from "../../definitions/entities/Order";
 import { SimpleQueueService } from "../../services/sqs/SimpleQueueService";
 
-const { SQS_ORDER_INTAKE_QUEUE_NAME } = process.env;
+const { SQS_ORDER_INTAKE_QUEUE_NAME, SQS_ORDER_EMAIL_QUEUE_NAME } = process.env;
 
 /**
  * @swagger
@@ -38,7 +38,7 @@ export class OrdersController extends Controller {
    *          schema:
    *            type: string
    *            description: The status to filter orders by.
-   *            enum: [PROCESSING, COMPLETED, ERROR]
+   *            enum: [PROCESSING, COMPLETED, CANCELLED, ERROR]
    *        - in: query
    *          name: count
    *          required: true
@@ -207,33 +207,36 @@ export class OrdersController extends Controller {
     * /api/orders:
     *    delete:
     *      tags: [Orders]
-    *      summary: Delete an order.
+    *      summary: Cancel an order.
     *      requestBody:
     *        required: true
     *        content:
     *          application/json:
     *            schema:
     *              type: object
+    *              required: [orderId]
     *              properties:
     *                orderId:
     *                  type: string
-    *                  description: The ID for the order.
+    *                  description: The ID for the order to cancel.
     *      produces:
     *        - application/json
     *      responses:
     *        "200":
     *          description: OK
     *        "404":
-    *          description: BAD REQUEST
+    *          description: ORDER NOT FOUND
     *        "400":
     *          description: BAD REQUEST
+    *        "409":
+    *          description: ORDER CANNOT YET BE CANCELLED
     *        "500":
     *          description: ERROR
     */
   public async deleteOrder(req: Request, res: Response): Promise<void> {
     try {
-      const { orderId } = req.body;
-      if (!orderId) {
+      const orderId = req.body?.orderId;
+      if (typeof orderId !== "string" || orderId.trim().length === 0) {
         res.status(400).json({ success: false, message: "ORDER_ID_REQUIRED" });
         return;
       }
@@ -244,8 +247,24 @@ export class OrdersController extends Controller {
         return;
       }
 
-      await OrdersDatabase.deleteOrder(orderId);
-      res.status(200).json({ success: true, order });
+      if (order.status === OrderStatus.CANCELLED) {
+        res.status(200).json({ success: true, order, message: "ORDER_ALREADY_CANCELLED" });
+        return;
+      }
+
+      if (!order.details?.customer?.email) {
+        res.status(409).json({ success: false, message: "CUSTOMER_DETAILS_UNAVAILABLE" });
+        return;
+      }
+
+      if (![OrderStatus.PROCESSING, OrderStatus.COMPLETED, OrderStatus.ERROR].includes(order.status)) {
+        res.status(409).json({ success: false, message: "ORDER_NOT_CANCELLABLE" });
+        return;
+      }
+
+      const cancelled = await OrdersDatabase.cancelOrder(orderId);
+      await SimpleQueueService.sendMessage(SQS_ORDER_EMAIL_QUEUE_NAME, "Email cancellation", { orderId, kind: "cancellation" });
+      res.status(200).json({ success: true, order: cancelled, message: "ORDER_CANCELLED" });
     }
     catch (error) {
       this.handleError(req, res, error);

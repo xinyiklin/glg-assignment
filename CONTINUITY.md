@@ -2,6 +2,28 @@
 
 ## Current state
 
+- 2026-09-09: User authorized publishing Task 4 through PR review and squash
+  merge when ready. Publication checks passed: both package typechecks,
+  cancellation scripts, five receipt cases, Compose validation, and whitespace.
+  Production alternatives remain documentation-only; no deployment is defined.
+- 2026-09-09: Re-reviewed the complete Task 4 diff and plan at user request.
+  No new in-scope defects or runtime fixes were needed. Both package typechecks,
+  both cancellation scripts, five receipt cases, Compose validation, and
+  whitespace passed fresh. Independent mb_verifier review passed. This pass did
+  not rerun live orders or PDF visual checks. No commit or publication occurred.
+- 2026-09-09: Task 4 implementation and plan reviewed with the user's direction
+  to keep assignment scope minimal. Fixed normal cancelled receipt-job PDF
+  cleanup, added cleanup/replay and pre-intake regression coverage, and documented
+  queue/SMTP recovery limits and production alternatives in
+  `docs/task-4-order-cancellation.md`. Both package typechecks, cancellation
+  scripts, five receipt cases, Compose validation, and whitespace passed.
+  Fresh local synthetic API/MailHog checks confirmed pre-intake 409, retained
+  cancellation, safe repeat, stored-recipient confirmation without attachment,
+  and a separate uncancelled order completing with a PDF email. Fresh independent
+  mb_verifier review closed both findings with no remaining material defects.
+  PDF visual layout and failure injection were not rerun. Concurrent DELETE may
+  return 500 for the conditional-write loser; delivery hardening remains deferred.
+  Changes remain uncommitted; no publication or storage reset was performed.
 - 2026-09-09: Extended Task 3 at user request with Unit price and Total price
   columns per item. Shared calculated row cents drive both row and overall totals;
   table widths are 45/15/20/20 percent with right-aligned prices. Updated the
@@ -67,12 +89,13 @@
 - `app/` and `pipeline/` are independent npm packages, containerized with the
   existing Node 20.17.0 image. Bootstrap tooling uses host Node 24 or newer;
   that prerequisite does not change the application runtime.
-- `TASKS.md` remains the exercise owner. Tasks 1-3 are complete; cancellation
-  remains unimplemented. Upstream amount reconciliation is explicitly deferred.
+- `TASKS.md` remains the exercise owner. Tasks 1-4 are implemented and verified
+  within assignment scope. Upstream amount reconciliation and production
+  cancellation-delivery hardening are explicitly deferred.
 - Setup deletes existing tables; rebuild attempts volume deletion. Inspect
   current data and obtain reset authority before using those commands.
 
 ## Next actions
 
-- Continue Task 4 only when requested. Revisit upstream alternatives after the
-  required tasks; do not expand the receipt pricing changes implicitly.
+- Keep documented production alternatives separate from the completed assignment
+  implementation; any future implementation requires its own scope.
