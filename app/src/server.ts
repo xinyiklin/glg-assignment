@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import path from "node:path";
 
 import { SwaggerUtilities } from "./utilities/SwaggerUtilities";
 import { Logger } from "./logger/Logger";
@@ -11,9 +12,8 @@ const app = express();
 const logger = new Logger("Server");
 
 app.use(express.json());
-app.get("/", (req: Request, res: Response) => {
-  return res.status(200).send("Support Resolution Tool </br><a href='./docs/'>Documentation</a>");
-});
+// Serve the console before Swagger's root-mounted asset middleware.
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.get("/healthcheck", (req: Request, res: Response) => {
   return res.status(200).send("OK");

@@ -2,6 +2,33 @@
 
 ## Current state
 
+- 2026-09-09: User authorized publishing the order support console after a
+  final review, through a feature PR and squash merge. Retain the minimal UI,
+  documented loaded-set pagination limit, and unchanged backend contracts.
+- 2026-09-09: Full console diff review reproduced and fixed a stale-list race:
+  a GET started before cancellation could later restore the old table status.
+  Shared mutation-state handling now invalidates prior reads and pauses list
+  refresh during writes. Added four brief comments for non-obvious request and
+  middleware behavior. Focused race regression, all 37 console/pagination
+  checks, app typecheck, syntax, and whitespace passed. Fresh independent full
+  diff review passed with no remaining findings; changes remain uncommitted.
+- 2026-09-09: Added user-requested pagination to the console: Previous/Next and
+  10/25/50 rows per page, default 10, over the explicitly labelled loaded set
+  of up to 50 orders. API unchanged. Selection persists while paging; size
+  changes reset to page 1 and refresh clamps out-of-range pages. Browser checks
+  passed for boundaries, sizes, live paging, pending guards, and mobile layout.
+  Fresh independent pagination review passed, including keyboard page-size
+  selection; all changes remain local and uncommitted.
+- 2026-09-09: Implemented a minimal local order console at `/` after Product
+  Brief and Delivery Plan approval. Plain HTML/CSS/JS adds create/sample data,
+  bounded list, exact lookup, details, manual refresh, and confirmed cancellation.
+  Existing API, workers, schemas, receipts, and dependencies remain unchanged.
+  App typecheck, existing cancellation/receipt scripts, browser flows, controlled
+  async/error checks, and desktop/mobile inspection passed. A fresh synthetic
+  order completed with its PDF email and was cancelled with a retained record
+  and attachment-free confirmation in MailHog. Fresh independent code, browser,
+  and artifact review passed with no material findings.
+  Changes are local and uncommitted; no push, merge, or storage reset occurred.
 - 2026-09-09: User authorized publishing Task 4 through PR review and squash
   merge when ready. Publication checks passed: both package typechecks,
   cancellation scripts, five receipt cases, Compose validation, and whitespace.
