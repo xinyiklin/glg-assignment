@@ -72,6 +72,12 @@ apply this Compose file's config argument; queues were absent and port 9325 was
 unavailable. The pin preserves the expected local environment without changing
 application logic. See the [upstream releases](https://github.com/softwaremill/elasticmq/releases).
 
+Alternative considered: adapt Compose to a newer ElasticMQ image by mounting
+`elasticmq.conf` at the image's default config path and removing the custom
+`command`. Pinning `1.6.16` was the smallest verified change that preserved the
+existing Compose/config structure, queue initialization, and legacy dashboard
+across fresh setups.
+
 ```sh
 ./bin/setup.sh
 ```

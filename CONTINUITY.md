@@ -2,6 +2,11 @@
 
 ## Current state
 
+- 2026-09-09: Checked off tasks 1 and 2 after successful order processing and
+  computer-use verification of the MailHog email and downloaded one-page PDF.
+  The PDF order ID matched the email subject and attachment filename. Its total
+  mismatch and generation-time `processing` status remain for receipt repair;
+  tasks 3 and 4 are still open. Added a brief README alternative-considered note.
 - 2026-09-08: Pinned ElasticMQ to 1.6.16 and documented the reason in README.
   Reproduced 1.7.1 with no queues and port 9325 refusing connections; its Java
   entrypoint placed Compose's config argument after the jar. Verified 1.6.16
