@@ -11,6 +11,7 @@ export interface Order {
   status: OrderStatus;
   createdAt: number;
   updatedAt: number;
+  cancelledAt?: number;
   receiptFilePath?: string;
   details?: OrderDetails;
   completedAt?: number;

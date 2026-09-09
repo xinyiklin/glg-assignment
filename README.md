@@ -89,3 +89,6 @@ Please complete the exercises found in [TASKS.md](TASKS.md).
 
 See [Task 3: receipt total](docs/task-3-receipt-total.md) for the fix,
 verification instructions, and deferred alternatives.
+
+See [Task 4: order cancellation](docs/task-4-order-cancellation.md) for the
+DELETE request, cancellation behavior, and delivery limitations.

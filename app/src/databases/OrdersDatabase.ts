@@ -1,8 +1,8 @@
 import {
-  DeleteItemCommand,
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
+  UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { unmarshall, marshall } from "@aws-sdk/util-dynamodb";
 
@@ -99,15 +99,30 @@ export class OrdersDatabase {
     return response.Items[0] as Order;
   }
 
-  public static async deleteOrder(orderId: string): Promise<void> {
+  public static async cancelOrder(orderId: string): Promise<Order> {
     const client = DynamoService.getClient();
     if (!DYNAMO_TABLE_ORDERS) throw new Error("DYNAMO_TABLE_ORDERS is not defined");
 
-    const command = new DeleteItemCommand({
+    const now = Date.now();
+    const command = new UpdateItemCommand({
       TableName: DYNAMO_TABLE_ORDERS,
       Key: { orderId: { S: orderId } },
+      UpdateExpression: "SET #status = :cancelled, cancelledAt = :cancelledAt, updatedAt = :updatedAt",
+      ConditionExpression: "attribute_exists(orderId) AND attribute_exists(details.customer.email) AND (#status = :processing OR #status = :completed OR #status = :error)",
+      ExpressionAttributeNames: { "#status": "status" },
+      ExpressionAttributeValues: {
+        ":cancelled": { S: OrderStatus.CANCELLED },
+        ":cancelledAt": { N: `${now}` },
+        ":updatedAt": { N: `${now}` },
+        ":processing": { S: OrderStatus.PROCESSING },
+        ":completed": { S: OrderStatus.COMPLETED },
+        ":error": { S: OrderStatus.ERROR },
+      },
+      ReturnValues: "ALL_NEW",
     });
 
-    await client.send(command);
+    const response = await client.send(command);
+    if (!response.Attributes) throw new Error("Cancellation did not return the updated order");
+    return unmarshall(response.Attributes) as Order;
   }
 }

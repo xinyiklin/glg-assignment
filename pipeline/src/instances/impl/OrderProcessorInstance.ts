@@ -43,7 +43,14 @@ export class OrderProcessorInstance extends QueueInstance<OrderMessage> {
     await fs.writeFile(filePath, buffer);
     this.logger.info(`Receipt saved: ${filePath}`);
 
-    await OrdersDatabase.update(order.orderId, { receiptFilePath: filePath });
+    const updated = await OrdersDatabase.updateIfStatus(order.orderId, OrderStatus.PROCESSING, { receiptFilePath: filePath });
+    if (!updated) {
+      await fs.unlink(filePath).catch((error: any) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+      this.logger.warn(`Order ${orderId} was cancelled before receipt was stored`);
+      return;
+    }
     await SimpleQueueService.sendMessage(SQS_ORDER_EMAIL_QUEUE_NAME, "Email the customer", { orderId });
   }
 }

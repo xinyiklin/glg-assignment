@@ -36,7 +36,11 @@ export class OrderIntakeInstance extends QueueInstance<OrderMessage> {
     }
 
     const details = OrderDetailsFactory.create();
-    await OrdersDatabase.update(order.orderId, { details });
+    const updated = await OrdersDatabase.updateIfStatus(order.orderId, OrderStatus.PROCESSING, { details });
+    if (!updated) {
+      this.logger.warn(`Order ${orderId} was cancelled before details were stored`);
+      return;
+    }
 
     this.logger.info(`Order ${orderId} details updated`);
     await SimpleQueueService.sendMessage(SQS_ORDER_PROCESSING_QUEUE_NAME, "Process a receipt from intake", { orderId });

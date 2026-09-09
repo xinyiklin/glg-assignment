@@ -7,6 +7,7 @@ import {
 import { unmarshall, marshall } from "@aws-sdk/util-dynamodb";
 
 import { MutableOrderFields, Order } from "../definitions/entities/Order";
+import { OrderStatus } from "../definitions/enums/OrderStatus";
 import { DynamoService } from "../services/dynamo/DynamoService";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 
@@ -95,5 +96,48 @@ export class OrdersDatabase {
 
     const dynamo = DynamoService.getClient();
     await dynamo.send(command);
+  }
+
+  public static async updateIfStatus(orderId: string, expectedStatus: OrderStatus, mutableFields: MutableOrderFields): Promise<boolean> {
+    const client = DynamoService.getClient();
+    if (!DYNAMO_TABLE_ORDERS) throw new Error("DYNAMO_TABLE_ORDERS is not defined");
+
+    const { status } = mutableFields;
+    const params: DynamoUpdateParams = {
+      UpdateExpression: "set updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":updatedAt": { N: `${Date.now()}` },
+        ":expectedStatus": { S: expectedStatus },
+      },
+      ExpressionAttributeNames: { "#status": "status" }
+    };
+
+    const manualFields = ["status"];
+    Object.entries(mutableFields).forEach(([key, value]) => {
+      if (!manualFields.includes(key) && value !== undefined && value !== null) {
+        params.UpdateExpression += `, ${key} = :${key}`;
+        params.ExpressionAttributeValues[`:${key}`] = marshall({ [key]: value })[key];
+      }
+    });
+
+    if (status !== undefined) {
+      params.UpdateExpression += ", #status = :status";
+      params.ExpressionAttributeValues[":status"] = { S: status };
+    }
+
+    const command = new UpdateItemCommand({
+      TableName: DYNAMO_TABLE_ORDERS,
+      Key: { orderId: { S: orderId } },
+      ...params,
+      ConditionExpression: "#status = :expectedStatus",
+    });
+
+    try {
+      await client.send(command);
+      return true;
+    } catch (error: any) {
+      if (error?.name === "ConditionalCheckFailedException") return false;
+      throw error;
+    }
   }
 }
