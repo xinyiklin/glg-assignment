@@ -97,6 +97,9 @@ The orders table pages through the loaded set of up to 50 orders. Choose 10, 25,
 or 50 rows per page and use Previous/Next; exact lookup can find orders outside
 that loaded set. Changing the page size returns to the first page.
 
+See the [console design note](docs/order-support-console.md) for its purpose,
+UX choices, JavaScript/TypeScript tradeoff, and verification guidance.
+
 ## Tasks
 Please complete the exercises found in [TASKS.md](TASKS.md).
 
