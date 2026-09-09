@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order support · GLG</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>Order support</h1><p>Local orders, from submission to cancellation.</p></div>
+      <nav aria-label="Local services">
+        <a href="/docs/" target="_blank" rel="noopener">Swagger ↗</a>
+        <a href="http://localhost:1080" target="_blank" rel="noopener">MailHog ↗</a>
+        <a href="http://localhost:9325" target="_blank" rel="noopener">Queues ↗</a>
+      </nav>
+    </header>
+    <section aria-labelledby="create-heading">
+      <div class="section-heading"><h2 id="create-heading">Create order</h2><span class="hint">Synthetic data · local services only</span></div>
+      <form id="create-form">
+        <fieldset id="create-fields">
+          <legend class="visually-hidden">New order</legend>
+          <div class="create-fields">
+            <label>User ID<input id="user-id" name="userId" required autocomplete="off"></label>
+            <label>Reference ID<input id="reference-id" name="referenceId" required autocomplete="off"></label>
+            <label>Submitted amount<input id="amount" name="amount" type="number" min="0" step="any" required></label>
+            <button type="submit" class="primary">Create order</button>
+            <button id="sample" type="button">Fill sample data</button>
+          </div>
+        </fieldset>
+      </form>
+      <p class="hint">Processing continues after submission. The submitted amount can differ from the receipt item total.</p>
+      <p id="create-message" class="message" role="status"></p>
+    </section>
+    <section aria-labelledby="orders-heading">
+      <div class="section-heading"><h2 id="orders-heading">Orders</h2><button id="refresh-list" type="button">Refresh list</button></div>
+      <p class="hint">Pages cover the loaded set of up to 50 orders, in no particular order. Use exact lookup for an order outside this set.</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Order list">
+        <table>
+          <thead><tr><th scope="col">Order ID</th><th scope="col">Reference</th><th scope="col">Status</th><th scope="col">Submitted amount</th><th scope="col">Created</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
+          <tbody id="orders"></tbody>
+        </table>
+      </div>
+      <nav class="pagination" aria-label="Order pages">
+        <label>Rows per page<select id="page-size" aria-controls="orders"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></label>
+        <p id="page-summary" class="hint" role="status">0 orders loaded</p>
+        <div class="page-buttons">
+          <button id="previous-page" type="button" aria-controls="orders" disabled>Previous</button>
+          <button id="next-page" type="button" aria-controls="orders" disabled>Next</button>
+        </div>
+      </nav>
+      <p id="list-message" class="message" role="status"></p>
+    </section>
+    <section aria-labelledby="details-heading">
+      <div class="section-heading"><h2 id="details-heading" tabindex="-1">Order details</h2><button id="refresh-order" type="button" disabled>Refresh order</button></div>
+      <form id="lookup-form">
+        <fieldset id="lookup-fields">
+          <legend class="visually-hidden">Exact order lookup</legend>
+          <div class="lookup-fields">
+            <label>Find by<select id="lookup-type"><option value="id">Order ID</option><option value="reference">Reference ID</option></select></label>
+            <label class="lookup-value">Exact identifier<input id="lookup-value" required autocomplete="off"></label>
+            <button type="submit">Find order</button>
+          </div>
+        </fieldset>
+      </form>
+      <p id="detail-message" class="message" role="status">Select an order from the list or find it by exact ID or reference.</p>
+      <div id="selected-order" hidden>
+        <dl id="order-facts" class="facts"></dl>
+        <h3>Customer</h3><p id="customer"></p>
+        <h3>Items</h3><div id="items"></div>
+        <details><summary>Raw order response</summary><pre id="raw-order"></pre></details>
+        <div class="cancel-action"><button id="cancel-order" type="button" class="danger" disabled>Cancel order</button><p id="cancel-reason" class="hint"></p></div>
+        <p class="hint">Cancellation retains the order. Check MailHog to verify email delivery and open receipt attachments; order status alone does not confirm delivery.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

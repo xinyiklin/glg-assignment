@@ -84,6 +84,19 @@ alternative considered.
 - Local Mail Server (Mailhog): http://localhost:1080
 - ElasticMQ (Debug): http://localhost:9325
 
+## Order support console
+
+Open http://localhost:9000 with the local stack running to create synthetic orders,
+browse a limited set, find an exact order ID/reference, inspect details, and cancel
+an eligible order. Use **Fill sample data** for a fresh reference and **Refresh**
+to check asynchronous processing; the page does not poll. Cancellation retains the
+record. Verify emails and receipt attachments in MailHog. Swagger remains at
+http://localhost:9000/docs/.
+
+The orders table pages through the loaded set of up to 50 orders. Choose 10, 25,
+or 50 rows per page and use Previous/Next; exact lookup can find orders outside
+that loaded set. Changing the page size returns to the first page.
+
 ## Tasks
 Please complete the exercises found in [TASKS.md](TASKS.md).
 
