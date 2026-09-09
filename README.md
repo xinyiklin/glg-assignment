@@ -64,6 +64,14 @@ cd glg-assignment
 ```
 
 ### 2. Setup the Project
+
+ElasticMQ is pinned to `softwaremill/elasticmq:1.6.16`, verified with the provided
+`elasticmq.conf` to initialize all four queues and serve the legacy dashboard on
+port 9325. The original unpinned image resolved to 1.7.1, whose entrypoint did not
+apply this Compose file's config argument; queues were absent and port 9325 was
+unavailable. The pin preserves the expected local environment without changing
+application logic. See the [upstream releases](https://github.com/softwaremill/elasticmq/releases).
+
 ```sh
 ./bin/setup.sh
 ```

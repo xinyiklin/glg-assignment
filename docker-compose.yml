@@ -11,7 +11,8 @@ services:
 
   # runs on 9324, 9325 for dashboard
   sqs:
-    image: softwaremill/elasticmq
+    # Pin to preserve elasticmq.conf queue initialization and the legacy 9325 UI.
+    image: softwaremill/elasticmq:1.6.16
     profiles: ["dev"]
     ports:
       - "9325:9325"
