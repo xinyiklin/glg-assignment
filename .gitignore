@@ -58,6 +58,8 @@ typings/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
 
 # next.js build output
 .next
@@ -71,3 +73,9 @@ typings/
 .DS_Store
 
 tmp
+
+# Added by machine-bootstrap project initializer
+CLAUDE.local.md
+.claude/settings.local.json
+.agent-work/
+Thumbs.db
