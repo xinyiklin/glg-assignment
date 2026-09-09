@@ -65,18 +65,10 @@ cd glg-assignment
 
 ### 2. Setup the Project
 
-ElasticMQ is pinned to `softwaremill/elasticmq:1.6.16`, verified with the provided
-`elasticmq.conf` to initialize all four queues and serve the legacy dashboard on
-port 9325. The original unpinned image resolved to 1.7.1, whose entrypoint did not
-apply this Compose file's config argument; queues were absent and port 9325 was
-unavailable. The pin preserves the expected local environment without changing
-application logic. See the [upstream releases](https://github.com/softwaremill/elasticmq/releases).
-
-Alternative considered: adapt Compose to a newer ElasticMQ image by mounting
-`elasticmq.conf` at the image's default config path and removing the custom
-`command`. Pinning `1.6.16` was the smallest verified change that preserved the
-existing Compose/config structure, queue initialization, and legacy dashboard
-across fresh setups.
+ElasticMQ is pinned to `softwaremill/elasticmq:1.6.16` for compatibility with
+the provided queue configuration and dashboard. See the
+[compatibility note](docs/elasticmq-compatibility.md) for the reasoning and
+alternative considered.
 
 ```sh
 ./bin/setup.sh
@@ -94,3 +86,6 @@ across fresh setups.
 
 ## Tasks
 Please complete the exercises found in [TASKS.md](TASKS.md).
+
+See [Task 3: receipt total](docs/task-3-receipt-total.md) for the fix,
+verification instructions, and deferred alternatives.
