@@ -37,14 +37,15 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   itemName: {
-    width: '50%',
+    width: '45%',
+    paddingRight: 8,
   },
   itemQuantity: {
-    width: '25%',
+    width: '15%',
     textAlign: 'center',
   },
   itemPrice: {
-    width: '25%',
+    width: '20%',
     textAlign: 'right',
   },
   total: {
@@ -59,6 +60,16 @@ const styles = StyleSheet.create({
 });
 
 export const ReceiptDocument: React.FC<{ order: Order }> = ({ order }) => {
+  // Generated item prices have two decimal places. Sum in cents before formatting.
+  const receiptItems = order.details?.items.map(item => ({
+    ...item,
+    totalCents: Math.round(item.price * 100) * item.quantity,
+  })) ?? [];
+  const totalCents = receiptItems.reduce(
+    (total, item) => total + item.totalCents,
+    0,
+  );
+
   return (
     <Document>
       <Page style={styles.page}>
@@ -88,25 +99,26 @@ export const ReceiptDocument: React.FC<{ order: Order }> = ({ order }) => {
         <View style={styles.tableHeader}>
           <Text style={styles.itemName}>Item</Text>
           <Text style={styles.itemQuantity}>Quantity</Text>
-          <Text style={styles.itemPrice}>Price</Text>
+          <Text style={styles.itemPrice}>Unit price</Text>
+          <Text style={styles.itemPrice}>Total price</Text>
         </View>
 
         {/* Items */}
-        {order.details?.items.map((item, index) => (
+        {receiptItems.map((item, index) => (
           <View style={styles.tableRow} key={index}>
             <Text style={styles.itemName}>{item.name}</Text>
             <Text style={styles.itemQuantity}>{item.quantity}</Text>
             <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+            <Text style={styles.itemPrice}>${(item.totalCents / 100).toFixed(2)}</Text>
           </View>
         ))}
 
         {/* Total Amount */}
         <View style={styles.total}>
           <Text style={styles.totalLabel}>Total Amount:</Text>
-          <Text>${order.amount.toFixed(2)}</Text>
+          <Text>${(totalCents / 100).toFixed(2)}</Text>
         </View>
       </Page>
     </Document>
   );
 }
-
